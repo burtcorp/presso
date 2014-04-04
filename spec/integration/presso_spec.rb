@@ -47,12 +47,12 @@ describe Presso do
 
   describe '#zip_dir' do
     it 'raises an error unless the target directory exists' do
-      expect { subject.zip_dir('foo.zip', 'non-existent-dir') }.to raise_error(Presso::PressoError, /non-existent-dir.*does not exist/)
+      expect { subject.zip_dir('foo.zip', 'non-existent-dir') }.to raise_error(Errno::ENOENT, /non-existent-dir/)
     end
 
     it 'raises an error if the target zip archive already exists' do
       FileUtils.touch 'foo.zip'
-      expect { subject.zip_dir('foo.zip', dir_to_zip) }.to raise_error(Presso::PressoError, /foo\.zip.*already exists/)
+      expect { subject.zip_dir('foo.zip', dir_to_zip) }.to raise_error(Errno::EEXIST, /foo\.zip/)
     end
 
     it 'resolves absolute symbolic links and adds the target file' do
@@ -86,7 +86,7 @@ describe Presso do
     end
 
     it 'raises an error if the source archive does not exist' do
-      expect { subject.unzip('non-existent.zip', 'somewhere') }.to raise_error(Presso::PressoError, /non-existent\.zip.*does not exist/)
+      expect { subject.unzip('non-existent.zip', 'somewhere') }.to raise_error(Errno::ENOENT, /non-existent\.zip/)
     end
 
     it 'raises an error if the target directory already exists' do
@@ -127,16 +127,16 @@ describe Presso do
       expect(File.size(File.join('unzipped_dir', 'HEAD'))).to eq File.size(BINARY_FILE_PATH)
     end
 
-    it 'raises an error when there is a directory entry followed by a file entry with the same name' do
-      FileUtils.mkdir 'HEAD'
-      `jar cMf my.zip -C #{dir_to_zip} HEAD HEAD`
-      expect { subject.unzip('my.zip', 'unzipped_dir') }.to raise_error(Presso::PressoError, /Filename conflict.*HEAD/)
-    end
-
     it 'raises an error when there is a file entry followed by a directory entry with the same name' do
       FileUtils.mkdir 'HEAD'
+      `jar cMf my.zip -C #{dir_to_zip} HEAD HEAD`
+      expect { subject.unzip('my.zip', 'unzipped_dir') }.to raise_error(Errno::EEXIST, /HEAD/)
+    end
+
+    it 'raises an error when there is a directory entry followed by a file entry with the same name' do
+      FileUtils.mkdir 'HEAD'
       `jar cMf my.zip HEAD -C #{dir_to_zip} HEAD`
-      expect { subject.unzip('my.zip', 'unzipped_dir') }.to raise_error(Presso::PressoError, /Filename conflict.*HEAD/)
+      expect { subject.unzip('my.zip', 'unzipped_dir') }.to raise_error(Errno::EISDIR)
     end
   end
 end
