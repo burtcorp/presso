@@ -1,5 +1,7 @@
 require 'java'
 
+raise LoadError, "Incompatible JRuby version. Use at least JRuby 1.7.4. See JRUBY-7157." if JRUBY_VERSION =~ /^1\.7\.[0-3]$/
+
 module Presso
   VERSION = '1.0.0'.freeze
 
@@ -7,10 +9,7 @@ module Presso
     include_package 'java.util.zip'
   end
 
-  PressoError = Class.new(StandardError)
-
   def self.zip_dir(zip, directory)
-    check_jruby_version!
     File.open(zip, 'wb') do |file|
       stream = JavaUtilZip::ZipOutputStream.new(file.to_outputstream)
       Dir.chdir(directory) do
@@ -28,7 +27,6 @@ module Presso
   end
 
   def self.unzip(zip, directory)
-    check_jruby_version!
     File.open(zip, 'rb') do |file|
       stream = JavaUtilZip::ZipInputStream.new(file.to_inputstream)
       Dir.mkdir(directory) unless File.directory?(directory)
@@ -44,13 +42,5 @@ module Presso
       end
       stream.close
     end
-  end
-
-  private
-
-  def self.check_jruby_version!
-    versions = [[1, 7, 3], JRUBY_VERSION.split(".", 3).map(&:to_i)]
-    invalid_version = versions.max == versions.first
-    raise PressoError, "Incompatible JRuby version. Use at least JRuby 1.7.4. See JRUBY-7157." if invalid_version
   end
 end
