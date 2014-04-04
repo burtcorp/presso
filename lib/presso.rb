@@ -11,12 +11,12 @@ class Presso
 
   PressoError = Class.new(StandardError)
 
-  def zip_dir(zip, directory)
-    raise PressoError, "Source directory #{directory} does not exist or is not a directory." unless File.directory?(directory)
-    raise PressoError, "Target file #{zip} already exists." if File.exists?(zip)
-    File.open(zip, 'wb') do |file|
+  def zip_dir(output_path, input_directory)
+    raise PressoError, "Source directory #{input_directory} does not exist or is not a directory." unless File.directory?(input_directory)
+    raise PressoError, "Target file #{output_path} already exists." if File.exists?(output_path)
+    File.open(output_path, 'wb') do |file|
       stream = JavaUtilZip::ZipOutputStream.new(file.to_outputstream)
-      Dir.chdir(directory) do
+      Dir.chdir(input_directory) do
         Dir['**/*'].each do |path|
           if File.file?(path)
             stream.putNextEntry(JavaUtilZip::ZipEntry.new(path))
@@ -32,13 +32,13 @@ class Presso
     end
   end
 
-  def unzip(zip, directory)
-    raise PressoError, "Source zip file #{zip} does not exist or is not a file." unless File.file?(zip)
-    raise PressoError, "Target directory #{directory} already exists." if File.exists?(directory)
-    File.open(zip, 'rb') do |file|
+  def unzip(input_path, output_directory)
+    raise PressoError, "Source zip file #{input_path} does not exist or is not a file." unless File.file?(input_path)
+    raise PressoError, "Target directory #{output_directory} already exists." if File.exists?(output_directory)
+    File.open(input_path, 'rb') do |file|
       stream = JavaUtilZip::ZipInputStream.new(file.to_inputstream)
-      FileUtils.mkdir_p(directory)
-      Dir.chdir(directory) do
+      FileUtils.mkdir_p(output_directory)
+      Dir.chdir(output_directory) do
         while (entry = stream.next_entry)
           begin
             if entry.directory?
