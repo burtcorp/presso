@@ -20,10 +20,6 @@ describe Presso do
     end
   end
 
-  subject do
-    described_class
-  end
-
   it 'unzips all files in from directory that it zipped' do
     subject.zip_dir('my.zip', dir_to_zip)
     subject.unzip('my.zip', 'unzipped_dir')

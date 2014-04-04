@@ -2,14 +2,14 @@ require 'java'
 
 raise LoadError, "Incompatible JRuby version. Use at least JRuby 1.7.4. See JRUBY-7157." if JRUBY_VERSION =~ /^1\.7\.[0-3]$/
 
-module Presso
+class Presso
   VERSION = '1.0.0'.freeze
 
   module JavaUtilZip
     include_package 'java.util.zip'
   end
 
-  def self.zip_dir(zip, directory)
+  def zip_dir(zip, directory)
     File.open(zip, 'wb') do |file|
       stream = JavaUtilZip::ZipOutputStream.new(file.to_outputstream)
       Dir.chdir(directory) do
@@ -26,7 +26,7 @@ module Presso
     end
   end
 
-  def self.unzip(zip, directory)
+  def unzip(zip, directory)
     File.open(zip, 'rb') do |file|
       stream = JavaUtilZip::ZipInputStream.new(file.to_inputstream)
       Dir.mkdir(directory) unless File.directory?(directory)
