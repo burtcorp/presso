@@ -9,7 +9,11 @@ class Presso
     include_package 'java.util.zip'
   end
 
+  PressoError = Class.new(StandardError)
+
   def zip_dir(zip, directory)
+    raise PressoError, "Source directory #{directory} does not exist or is not a directory." unless File.directory?(directory)
+    raise PressoError, "Target file #{zip} already exists." if File.exists?(zip)
     File.open(zip, 'wb') do |file|
       stream = JavaUtilZip::ZipOutputStream.new(file.to_outputstream)
       Dir.chdir(directory) do
@@ -19,6 +23,8 @@ class Presso
             IO.copy_stream(path, stream.to_io)
           elsif File.directory?(path)
             stream.putNextEntry(JavaUtilZip::ZipEntry.new(path+'/'))
+          else
+            raise PressoError, "File #{path} is not a regular file."
           end
         end
       end
@@ -27,15 +33,22 @@ class Presso
   end
 
   def unzip(zip, directory)
+    raise PressoError, "Source zip file #{zip} does not exist or is not a file." unless File.file?(zip)
+    raise PressoError, "Target directory #{directory} already exists." if File.exists?(directory)
     File.open(zip, 'rb') do |file|
       stream = JavaUtilZip::ZipInputStream.new(file.to_inputstream)
-      Dir.mkdir(directory) unless File.directory?(directory)
+      FileUtils.mkdir_p(directory)
       Dir.chdir(directory) do
         while (entry = stream.next_entry)
-          if entry.directory?
-            Dir.mkdir(entry.name)
-          else
-            IO.copy_stream(stream.to_io, entry.name)
+          begin
+            if entry.directory?
+              FileUtils.mkdir_p(entry.name)
+            else
+              FileUtils.mkdir_p(File.dirname(entry.name))
+              IO.copy_stream(stream.to_io, entry.name)
+            end
+          rescue Errno::EEXIST, Errno::EISDIR => e
+            raise PressoError, "Filename conflict. #{entry.name} exists with different type.", e.backtrace
           end
           stream.close_entry
         end
