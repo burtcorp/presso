@@ -19,11 +19,11 @@ class Presso
         stream_io = stream.to_io
         Dir['**/*'].each do |path|
           if File.file?(path)
-            stream.putNextEntry(JavaUtilZip::ZipEntry.new(path))
+            stream.put_next_entry(JavaUtilZip::ZipEntry.new(path))
             IO.copy_stream(path, stream_io)
             stream_io.flush
           elsif File.directory?(path)
-            stream.putNextEntry(JavaUtilZip::ZipEntry.new(path+'/'))
+            stream.put_next_entry(JavaUtilZip::ZipEntry.new(path+'/'))
           else
             raise PressoError, "File #{path} is not a regular file."
           end
