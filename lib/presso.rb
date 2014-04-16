@@ -27,6 +27,7 @@ class Presso
           else
             raise PressoError, "File #{path} is not a regular file."
           end
+          stream.close_entry
         end
         stream_io.close
       end
