@@ -16,17 +16,19 @@ class Presso
     Dir.chdir(input_directory) do
       File.open(output_path, File::WRONLY|File::CREAT|File::EXCL, binmode: true) do |file|
         stream = JavaUtilZip::ZipOutputStream.new(file.to_outputstream)
+        stream_io = stream.to_io
         Dir['**/*'].each do |path|
           if File.file?(path)
             stream.putNextEntry(JavaUtilZip::ZipEntry.new(path))
-            IO.copy_stream(path, stream.to_io)
+            IO.copy_stream(path, stream_io)
+            stream_io.flush
           elsif File.directory?(path)
             stream.putNextEntry(JavaUtilZip::ZipEntry.new(path+'/'))
           else
             raise PressoError, "File #{path} is not a regular file."
           end
         end
-        stream.close
+        stream_io.close
       end
     end
   end
@@ -35,6 +37,7 @@ class Presso
     raise PressoError, "Target directory #{output_directory} already exists." if File.exists?(output_directory)
     File.open(input_path, 'rb') do |file|
       stream = JavaUtilZip::ZipInputStream.new(file.to_inputstream)
+      stream_io = stream.to_io
       FileUtils.mkdir_p(output_directory)
       Dir.chdir(output_directory) do
         while (entry = stream.next_entry)
@@ -42,12 +45,12 @@ class Presso
             FileUtils.mkdir_p(entry.name)
           else
             FileUtils.mkdir_p(File.dirname(entry.name))
-            IO.copy_stream(stream.to_io, entry.name)
+            IO.copy_stream(stream_io, entry.name)
           end
           stream.close_entry
         end
       end
-      stream.close
+      stream_io.close
     end
   end
 end
