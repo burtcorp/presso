@@ -46,7 +46,9 @@ class Presso
             FileUtils.mkdir_p(entry.name)
           else
             FileUtils.mkdir_p(File.dirname(entry.name))
-            IO.copy_stream(stream_io, entry.name)
+            File.open(entry.name, 'w') do |output|
+              IO.copy_stream(stream_io, output)
+            end
           end
           stream.close_entry
         end
