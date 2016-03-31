@@ -20,7 +20,9 @@ class Presso
         Dir['**/*'].each do |path|
           if File.file?(path)
             stream.put_next_entry(JavaUtilZip::ZipEntry.new(path))
-            IO.copy_stream(path, stream_io)
+            File.open(path) do |input|
+              IO.copy_stream(input, stream_io)
+            end
             stream_io.flush
           elsif File.directory?(path)
             stream.put_next_entry(JavaUtilZip::ZipEntry.new(path+'/'))
@@ -46,7 +48,9 @@ class Presso
             FileUtils.mkdir_p(entry.name)
           else
             FileUtils.mkdir_p(File.dirname(entry.name))
-            IO.copy_stream(stream_io, entry.name)
+            File.open(entry.name, 'w') do |output|
+              IO.copy_stream(stream_io, output)
+            end
           end
           stream.close_entry
         end
