@@ -3,7 +3,7 @@ require 'java'
 raise LoadError, "Incompatible JRuby version. Use at least JRuby 1.7.4. See JRUBY-7157." if JRUBY_VERSION =~ /^1\.7\.[0-3]$/
 
 class Presso
-  VERSION = '1.0.1'.freeze
+  VERSION = '1.0.2'.freeze
 
   module JavaUtilZip
     include_package 'java.util.zip'
