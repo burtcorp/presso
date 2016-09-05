@@ -76,6 +76,22 @@ describe Presso do
         expect { subject.zip_dir('my.zip', dir_to_zip) }.to raise_error(Presso::PressoError, /not_a_file.*not a regular file/)
       end
     end
+
+    context 'when no compression level is provided' do
+      it 'uses the default compression level' do
+        subject.zip_dir('default.zip', dir_to_zip)
+        subject.zip_dir('level--1.zip', dir_to_zip, compression_level: -1)
+        expect(File.size('level--1.zip')).to eql(File.size('default.zip'))
+      end
+    end
+
+    context 'when a compression level is provided' do
+      it 'uses the provided compression level' do
+        subject.zip_dir('default.zip', dir_to_zip)
+        subject.zip_dir('level-0.zip', dir_to_zip, compression_level: 0)
+        expect(File.size('level-0.zip')).to be > File.size('default.zip')
+      end
+    end
   end
 
   describe '#unzip' do
