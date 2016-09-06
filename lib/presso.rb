@@ -11,11 +11,14 @@ class Presso
 
   PressoError = Class.new(StandardError)
 
-  def zip_dir(output_path, input_directory)
+  def zip_dir(output_path, input_directory, options={})
     output_path = File.expand_path(output_path)
     Dir.chdir(input_directory) do
       File.open(output_path, File::WRONLY|File::CREAT|File::EXCL, binmode: true) do |file|
         stream = JavaUtilZip::ZipOutputStream.new(file.to_outputstream)
+        if (compression_level = options[:compression_level])
+          stream.level = compression_level
+        end
         stream_io = stream.to_io
         Dir['**/*'].each do |path|
           if File.file?(path)
